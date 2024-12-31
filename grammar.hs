@@ -47,8 +47,29 @@ showGrammar [] = ""
 showGrammar (p : productions) = (showProduction p) ++ "\n" ++ showGrammar productions
 
 
+-- function to remove duplicates from a list
+removeDups :: Eq a => [a] -> [a]
+removeDups [] = []
+removeDups (a : as) = [a] ++ removeDups (removeOne a as) where
+    removeOne a [] = []
+    removeOne a (x : xs)
+        | a == x = removeOne a xs
+        | otherwise = (x : removeOne a xs)
+
+-- get all non-terminals of a given Grammar
+-- in a valid grammar, all premises should be distinct. So we don't use the removeDups-function
 getAllNonTerminals :: Grammar -> [NonTerminal]
-getAllNonTerminals = undefined
+getAllNonTerminals [] = []
+getAllNonTerminals ((nonTerminal, _) : productions) = [nonTerminal] ++ (getAllNonTerminals productions)
+
+
+-- get all terminals of a given grammar
+getAllTerminalsOfConclusion :: Conclusion -> [Terminal]
+getAllTerminalsOfConclusion [] = []
+getAllTerminalsOfConclusion (T terminal : symbols) = [terminal] ++ (getAllTerminalsOfConclusion symbols)
+getAllTerminalsOfConclusion (NT _ : symbols) = getAllTerminalsOfConclusion symbols
+
 
 getAllTerminals :: Grammar -> [Terminal]
-getAllTerminals = undefined
+getAllTerminals productions = removeDups (concatMap getAllTerminalsOfProduction productions) where
+    getAllTerminalsOfProduction (_, conclusions) = concatMap getAllTerminalsOfConclusion conclusions 
