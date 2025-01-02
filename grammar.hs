@@ -17,6 +17,9 @@ type Production = (NonTerminal, [Conclusion])
 type Grammar = [Production]
 
 
+-- function to bring a grammar into its standard form. That is, all premises are distinct
+simplifyGrammar :: Grammar -> Grammar
+simplifyGrammar = undefined
 
 -- functions to print a grammar
 showSymbol :: Symbol -> String
@@ -73,3 +76,11 @@ getAllTerminalsOfConclusion (NT _ : symbols) = getAllTerminalsOfConclusion symbo
 getAllTerminals :: Grammar -> [Terminal]
 getAllTerminals productions = removeDups (concatMap getAllTerminalsOfProduction productions) where
     getAllTerminalsOfProduction (_, conclusions) = concatMap getAllTerminalsOfConclusion conclusions 
+
+
+-- get the conclusions with a given Non-Terminal as premise
+getConclusionsOfNT :: Grammar -> NonTerminal -> [Conclusion]
+getConclusionsOfNT [] nt = error $ "NonTerminal " ++ nt ++ " is not a premise of the grammar!"
+getConclusionsOfNT (p : productions) nt
+    | fst p == nt = snd p
+    | otherwise = getConclusionsOfNT productions nt
