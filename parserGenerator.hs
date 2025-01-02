@@ -1,6 +1,7 @@
 module ParserGenerator where
 
 import Grammar
+import Data.List (delete)
 
 -- we generate the parsing-table in this module
 
@@ -10,8 +11,12 @@ firstTable :: Grammar -> [(NonTerminal, [Terminal])]
 firstTable grammar = map (\nt -> (nt, computeFirst grammar nt)) (getAllNonTerminals grammar)
 
 computeFirst :: Grammar -> NonTerminal -> [Terminal]
-computeFirst grammar nt = concat $ map firstOfConclusion (getConclusionsOfNT grammar nt) where
+computeFirst grammar nt = removeDups $ concat $ map firstOfConclusion (getConclusionsOfNT grammar nt) where
     firstOfConclusion [] = ["$"]
     firstOfConclusion (T terminalSymbol : _) = [terminalSymbol]
-    firstOfConclusion (NT nonTerminal : _) = computeFirst grammar nonTerminal
+    firstOfConclusion (NT nonTerminal : conclusions) = 
+        if "$" `elem` computeFirst grammar nonTerminal then
+            delete "$" (computeFirst grammar nonTerminal) ++ firstOfConclusion conclusions
+        else 
+            computeFirst grammar nonTerminal
  
