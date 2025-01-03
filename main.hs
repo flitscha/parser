@@ -4,8 +4,8 @@ import Grammar
 import ParserGenerator
 
 -- example grammar
-exampleGrammar :: Grammar
-exampleGrammar =
+exampleGrammar1 :: Grammar
+exampleGrammar1 =
     [ ("E", [[NT "T", NT "E'"]])
     , ("E'", [[T "+", NT "T", NT "E'"], []])
     , ("T", [[NT "F", NT "T'"]])
@@ -51,7 +51,7 @@ exampleGrammar5 =
 
 main :: IO ()
 main = do
-    let testGrammar = exampleGrammar4
+    let testGrammar = exampleGrammar5
     putStrLn "\nGrammar:"
     putStrLn $ showGrammar testGrammar
     putStr "all non-terminals: "
@@ -60,3 +60,5 @@ main = do
     print $ getAllTerminals testGrammar
     putStrLn "\nFirst-table:"
     print $ firstTable testGrammar
+    putStrLn "\nFollow-table:"
+    print $ followTable testGrammar
