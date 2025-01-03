@@ -3,6 +3,7 @@ module ParserGenerator where
 import Grammar
 import Data.List (delete, (\\))
 import qualified Data.Map as Map
+import Data.List (intercalate)
 
 -- we generate the parsing-table in this module
 
@@ -13,14 +14,16 @@ firstTable :: Grammar -> [(NonTerminal, [Terminal])]
 firstTable grammar = map (\nt -> (nt, computeFirst grammar nt)) (getAllNonTerminals grammar)
 
 computeFirst :: Grammar -> NonTerminal -> [Terminal]
-computeFirst grammar nt = removeDups $ concat $ map firstOfConclusion (getConclusionsOfNT grammar nt) where
-    firstOfConclusion [] = ["$"]
-    firstOfConclusion (T terminalSymbol : _) = [terminalSymbol]
-    firstOfConclusion (NT nonTerminal : conclusions) = 
-        if "$" `elem` computeFirst grammar nonTerminal then
-            delete "$" (computeFirst grammar nonTerminal) ++ firstOfConclusion conclusions
-        else 
-            computeFirst grammar nonTerminal
+computeFirst grammar nt = removeDups $ concatMap (firstOfConclusion grammar) (getConclusionsOfNT grammar nt) where
+
+firstOfConclusion :: Grammar -> Conclusion -> [Terminal]
+firstOfConclusion _ [] = ["$"]
+firstOfConclusion _ (T terminalSymbol : _) = [terminalSymbol]
+firstOfConclusion grammar (NT nonTerminal : conclusions) = 
+    if "$" `elem` computeFirst grammar nonTerminal then
+        delete "$" (computeFirst grammar nonTerminal) ++ firstOfConclusion grammar conclusions
+    else 
+        computeFirst grammar nonTerminal
 
 
 -- The Function Follow(X) Returns the set of terminals that can appear immediately after X in a derivative. 
@@ -70,4 +73,26 @@ firstOfSequence grammar (NT nonTerminal : rest) =
     in if "$" `elem` firstOfNT
         then (firstOfNT \\ ["$"]) ++ firstOfSequence grammar rest
         else firstOfNT
+
+
+-- creating the parsing table using first() and follow()
+type ParsingTable = Map.Map (NonTerminal, Terminal) Conclusion
+
+createParsingTable :: Grammar -> [(NonTerminal, [Terminal])] -> [(NonTerminal, [Terminal])] -> ParsingTable
+createParsingTable grammar firstTable followTable = foldl insertProduction Map.empty grammar where
+    -- insert every Production into the table.
+    insertProduction :: ParsingTable -> Production -> ParsingTable
+    insertProduction parsingTable (nt, conclusions) = foldl (insertConclusion nt) parsingTable conclusions
+    -- insert every Conclusion of one Production into the table (we have to remember the nonTerminal in the premise)
+    insertConclusion :: NonTerminal -> ParsingTable -> Conclusion -> ParsingTable
+    insertConclusion nt parsingTable conclusion = 
+        let firstSet = firstOfConclusion grammar conclusion
+            followSet = computeFollow grammar nt
+            -- for which terminals can we insert this rule?
+            terminalsToApply = if "$" `elem` firstSet
+                then (firstSet \\ ["$"]) ++ followSet
+                else firstSet
+        -- insert every terminal in terminalsToApply to the table using foldl
+        -- type of foldl: (a -> b -> a) -> a -> [b] -> a
+        in foldl (\currentTable terminal -> Map.insert (nt, terminal) conclusion currentTable) parsingTable terminalsToApply
 

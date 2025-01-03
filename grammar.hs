@@ -5,7 +5,7 @@ type NonTerminal = String
 type Terminal = String
 
 -- a symbol is either a terminal or a non-terminal
-data Symbol = T Terminal | NT NonTerminal deriving (Eq)
+data Symbol = T Terminal | NT NonTerminal deriving (Eq, Show)
 
 -- In a context-free grammar, the premise is always exactly one non-terminal symbol.
 -- The conclusion, on the other hand, is arbitrary.
@@ -30,7 +30,6 @@ showSymbol (NT nt) = nt
 -- To make it readable, all symbols should consist of only one char. 
 -- Non-terminals should be uppercase. Terminals should be lowercase.
 showConclusion :: Conclusion -> String
-showConclusion [] = "ε"
 showConclusion (s : []) = showSymbol s
 showConclusion (s : symbols) = (showSymbol s) ++ showConclusion symbols
 
