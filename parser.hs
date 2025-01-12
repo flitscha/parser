@@ -2,6 +2,7 @@ module Parser where
 
 import ParserGenerator
 import Grammar
+import qualified Data.Map as Map
 
 
 data SyntaxTree =
@@ -24,7 +25,28 @@ parse input grammar = parseWithStack input parsingTable [T epsilon, NT startSymb
 --                  input          table         stack              output
 parseWithStack :: [Terminal] -> ParsingTable -> [Symbol] -> (SyntaxTree, [Terminal])
 parseWithStack [] _ [] = (EmptyTree, []) -- successful parsed
-parseWithStack [] _ (x:xs) = (EmptyTree, []) -- not successful: Stack is not empty 
+parseWithStack [] _ (x:xs) = (EmptyTree, []) -- not successful: Stack is not empty
+parseWithStack (x:xs) _ [] = (EmptyTree, x:xs) -- not successful: Stack is empty, but there is input left
 parseWithStack (x:xs) _ (T terminal : _) -- first element in the stack is a terminal
     | x /= terminal = (EmptyTree, x:xs) -- the terminal does not match with the input
     | otherwise = (Leaf terminal, xs)
+-- next sybol on the stack is a nonTerminal
+parseWithStack (x:xs) table (NT nonTerminal : _) =
+    case Map.lookup (nonTerminal, x) table of -- transform the nonTerminal with a rule of the grammar
+        Nothing -> (EmptyTree, x:xs)
+        Just [] -> (EmptyTree, x:xs) -- error: there was no rule in the table
+        Just rule ->
+            let (subtrees, remainingInput) = parseSequence (x:xs) table rule
+            in (Node nonTerminal subtrees, remainingInput)
+
+
+-- auxiliary function to create one syntax tree for each symbol on the stack
+-- this is used, when a rule is used. For example: S -> AaB
+-- in this case a tree with root S is constructed. This tree has 3 Subtrees with the Roots A, a and B
+--                  input          table         stack    output: multiple syntax trees
+parseSequence :: [Terminal] -> ParsingTable -> [Symbol] -> ([SyntaxTree], [Terminal])
+parseSequence input _ [] = ([], input) -- empty Stack: no trees are returned
+parseSequence input table (s:symbols) = (child : children, finalInput) where
+    (child, remainingInput) = parseWithStack input table [s]
+    (children, finalInput) = parseSequence remainingInput table symbols
+
