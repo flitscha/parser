@@ -2,6 +2,7 @@ module Main where
 
 import Grammar
 import ParserGenerator
+import Parser
 
 -- example grammar
 exampleGrammar1 :: Grammar
@@ -63,4 +64,4 @@ main = do
     putStrLn "\nFollow-table:"
     print $ followTable testGrammar
     putStrLn "\n Parsing-table:"
-    print $ (createParsingTable testGrammar [] [])
+    print $ (createParsingTable testGrammar)

@@ -17,11 +17,11 @@ computeFirst :: Grammar -> NonTerminal -> [Terminal]
 computeFirst grammar nt = removeDups $ concatMap (firstOfConclusion grammar) (getConclusionsOfNT grammar nt) where
 
 firstOfConclusion :: Grammar -> Conclusion -> [Terminal]
-firstOfConclusion _ [] = ["$"]
+firstOfConclusion _ [] = [epsilon]
 firstOfConclusion _ (T terminalSymbol : _) = [terminalSymbol]
 firstOfConclusion grammar (NT nonTerminal : conclusions) = 
-    if "$" `elem` computeFirst grammar nonTerminal then
-        delete "$" (computeFirst grammar nonTerminal) ++ firstOfConclusion grammar conclusions
+    if epsilon `elem` computeFirst grammar nonTerminal then
+        delete epsilon (computeFirst grammar nonTerminal) ++ firstOfConclusion grammar conclusions
     else 
         computeFirst grammar nonTerminal
 
@@ -32,7 +32,7 @@ followTable grammar = map (\nt -> (nt, computeFollow grammar nt)) (getAllNonTerm
 
 computeFollow :: Grammar -> NonTerminal -> [Terminal]
 computeFollow grammar nt 
-    | nt == startSymbol = removeDups $ "$" : concatMap (followInProduction grammar nt) grammar
+    | nt == startSymbol = removeDups $ epsilon : concatMap (followInProduction grammar nt) grammar
     | otherwise = removeDups $ concatMap (followInProduction grammar nt) grammar where
         startSymbol = fst (head grammar)
 
@@ -48,11 +48,11 @@ followInConclusion grammar nt lhs conclusion =
             let firstOfRest = firstOfSequence grammar rest
                 -- if we found the nonterminal in the conclusion, we look at the first terminals after
                 -- this nonterminal.
-                -- if "$" is in firstOfRest, then everything can disappear in the conclusion.
+                -- if epsilon is in firstOfRest, then everything can disappear in the conclusion.
                 -- in this case we also have to look at possible following symbols of the lhs-nonterminal
-                followFromRest = if "$" `elem` firstOfRest && nt /= lhs
-                                    then (firstOfRest \\ ["$"]) ++ computeFollow grammar lhs
-                                    else firstOfRest \\ ["$"]
+                followFromRest = if epsilon `elem` firstOfRest && nt /= lhs
+                                    then (firstOfRest \\ [epsilon]) ++ computeFollow grammar lhs
+                                    else firstOfRest \\ [epsilon]
             in followFromRest
   where
     -- Find the first occurrence of the nonterminal in a conclusion (list of Symbols)
@@ -64,22 +64,25 @@ followInConclusion grammar nt lhs conclusion =
     findNTInConclusion (_ : xs) = findNTInConclusion xs
 
 -- Calculates the possible first Terminals of a sequence of symbols
--- If a '$' appears, the next symbol is also looked at.
+-- If a Epslon appears, the next symbol is also looked at.
 firstOfSequence :: Grammar -> [Symbol] -> [Terminal]
-firstOfSequence _ [] = ["$"]
+firstOfSequence _ [] = [epsilon]
 firstOfSequence grammar (T terminalSymbol : _) = [terminalSymbol]
 firstOfSequence grammar (NT nonTerminal : rest) =
     let firstOfNT = computeFirst grammar nonTerminal
-    in if "$" `elem` firstOfNT
-        then (firstOfNT \\ ["$"]) ++ firstOfSequence grammar rest
+    in if epsilon `elem` firstOfNT
+        then (firstOfNT \\ [epsilon]) ++ firstOfSequence grammar rest
         else firstOfNT
 
 
 -- creating the parsing table using first() and follow()
 type ParsingTable = Map.Map (NonTerminal, Terminal) Conclusion
 
-createParsingTable :: Grammar -> [(NonTerminal, [Terminal])] -> [(NonTerminal, [Terminal])] -> ParsingTable
-createParsingTable grammar firstTable followTable = foldl insertProduction Map.empty grammar where
+createParsingTable :: Grammar -> ParsingTable
+createParsingTable grammar = createParsingTableAux grammar [] []
+
+createParsingTableAux :: Grammar -> [(NonTerminal, [Terminal])] -> [(NonTerminal, [Terminal])] -> ParsingTable
+createParsingTableAux grammar firstTable followTable = foldl insertProduction Map.empty grammar where
     -- insert every Production into the table.
     insertProduction :: ParsingTable -> Production -> ParsingTable
     insertProduction parsingTable (nt, conclusions) = foldl (insertConclusion nt) parsingTable conclusions
@@ -89,8 +92,8 @@ createParsingTable grammar firstTable followTable = foldl insertProduction Map.e
         let firstSet = firstOfConclusion grammar conclusion
             followSet = computeFollow grammar nt
             -- for which terminals can we insert this rule?
-            terminalsToApply = if "$" `elem` firstSet
-                then (firstSet \\ ["$"]) ++ followSet
+            terminalsToApply = if epsilon `elem` firstSet
+                then (firstSet \\ [epsilon]) ++ followSet
                 else firstSet
         -- insert every terminal in terminalsToApply to the table using foldl
         -- type of foldl: (a -> b -> a) -> a -> [b] -> a

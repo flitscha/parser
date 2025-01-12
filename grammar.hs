@@ -4,6 +4,10 @@ module Grammar where
 type NonTerminal = String
 type Terminal = String
 
+-- epsilon is a special case of a Terminal
+epsilon :: Terminal
+epsilon = "$"
+
 -- a symbol is either a terminal or a non-terminal
 data Symbol = T Terminal | NT NonTerminal deriving (Eq, Show)
 
@@ -57,6 +61,10 @@ removeDups (a : as) = [a] ++ removeDups (removeOne a as) where
     removeOne a (x : xs)
         | a == x = removeOne a xs
         | otherwise = (x : removeOne a xs)
+
+
+getStartSymbol :: Grammar -> NonTerminal
+getStartSymbol ((nt, _) : _) = nt
 
 -- get all non-terminals of a given Grammar
 -- in a valid grammar, all premises should be distinct. So we don't use the removeDups-function
