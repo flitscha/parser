@@ -49,14 +49,24 @@ exampleGrammar5 =
     , ("C", [[T "h"], [T "$"]])
     ]
 
+-- grammar for expressions with thy symbol 1, +, *, (, )
+exampleGrammar6 :: Grammar
+exampleGrammar6 =
+    [ ("E",  [[NT "T", NT "E'"]])
+    , ("E'", [[T "+", NT "T", NT "E'"], [T epsilon]])
+    , ("T",  [[NT "F", NT "T'"]])
+    , ("T'", [[T "*", NT "F", NT "T'"], [T epsilon]])
+    , ("F",  [[T "1"], [T "(", NT "E", T ")"]])
+    ]
+
 
 main :: IO ()
 main = do
-    let testGrammar = exampleGrammar4
+    let testGrammar = exampleGrammar6
     putStrLn "\nGrammar:"
     putStrLn $ showGrammar testGrammar
     let myParser = createParser testGrammar
-    let sequence = stringToTerminalList "acbgh"
+    let sequence = stringToTerminalList "1+1*(1+1)*(1+1*1)"
     let (tree, rest) = myParser sequence
     putStr "\nSequence: "
     print sequence
