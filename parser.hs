@@ -12,11 +12,16 @@ data SyntaxTree =
   deriving (Show, Eq)
 
 
--- the output is a tuple: the resulting syntax-tree and [Terminal] is the rest of the input
+
+-- function to create a parser, with a grammar as input
+-- this way, the parsing table gets only calculated once. (because of sharing)
+
+-- a parser is a function [Terminal] -> (SyntaxTree, [Terminal])
+-- the output of the parser is a tuple: the resulting syntax-tree and [Terminal] is the rest of the input
 -- if the output is not (_, []), the input could't be parsed. 
 -- [Terminal] is part of the output, to indicate where the error happened.
-parse :: [Terminal] -> Grammar -> (SyntaxTree, [Terminal])
-parse input grammar = parseWithStack input parsingTable [T epsilon, NT startSymbol] where
+createParser :: Grammar -> ([Terminal] -> (SyntaxTree, [Terminal]))
+createParser grammar = \input -> parseWithStack input parsingTable [NT startSymbol, T epsilon] where
     parsingTable = createParsingTable grammar
     startSymbol = getStartSymbol grammar
 

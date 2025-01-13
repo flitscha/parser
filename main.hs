@@ -52,16 +52,20 @@ exampleGrammar5 =
 
 main :: IO ()
 main = do
-    let testGrammar = exampleGrammar5
+    let testGrammar = exampleGrammar4
     putStrLn "\nGrammar:"
     putStrLn $ showGrammar testGrammar
-    putStr "all non-terminals: "
-    print $ getAllNonTerminals testGrammar
-    putStr "all terminals: "
-    print $ getAllTerminals testGrammar
-    putStrLn "\nFirst-table:"
-    print $ firstTable testGrammar
-    putStrLn "\nFollow-table:"
-    print $ followTable testGrammar
-    putStrLn "\n Parsing-table:"
-    print $ (createParsingTable testGrammar)
+    --putStr "all non-terminals: "
+    --print $ getAllNonTerminals testGrammar
+    --putStr "all terminals: "
+    --print $ getAllTerminals testGrammar
+    --putStrLn "\nFirst-table:"
+    --print $ firstTable testGrammar
+    --putStrLn "\nFollow-table:"
+    --print $ followTable testGrammar
+    let myParser = createParser testGrammar
+    let sequence = ["a", "c", "b", "g", "h"]
+    let tree = myParser sequence
+    putStr "\nSequence: "
+    print sequence
+    print tree
