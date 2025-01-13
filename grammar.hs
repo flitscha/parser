@@ -91,3 +91,7 @@ getConclusionsOfNT [] nt = error $ "NonTerminal " ++ nt ++ " is not a premise of
 getConclusionsOfNT (p : productions) nt
     | fst p == nt = snd p
     | otherwise = getConclusionsOfNT productions nt
+
+-- convert a string into a list of Terminals, where each char is a Terminal
+stringToTerminalList :: String -> [Terminal]
+stringToTerminalList string = map (\char -> [char]) string

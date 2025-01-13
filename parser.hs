@@ -3,6 +3,7 @@ module Parser where
 import ParserGenerator
 import Grammar
 import qualified Data.Map as Map
+import Data.List (intercalate)
 
 
 data SyntaxTree =
@@ -55,3 +56,14 @@ parseSequence input table (s:symbols) = (child : children, finalInput) where
     (child, remainingInput) = parseWithStack input table [s]
     (children, finalInput) = parseSequence remainingInput table symbols
 
+
+
+showTree :: SyntaxTree -> String
+showTree tree = go 0 tree where
+    -- Helper function with indentation level
+    go :: Int -> SyntaxTree -> String
+    go indent EmptyTree = replicate indent ' ' ++ "∅" -- Empty tree
+    go indent (Leaf terminal) = replicate indent ' ' ++ show terminal
+    go indent (Node nonTerminal children) =
+        replicate indent ' ' ++ show nonTerminal ++ "\n" ++
+        intercalate "\n" (map (go (indent + 2)) children)

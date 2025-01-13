@@ -55,17 +55,12 @@ main = do
     let testGrammar = exampleGrammar4
     putStrLn "\nGrammar:"
     putStrLn $ showGrammar testGrammar
-    --putStr "all non-terminals: "
-    --print $ getAllNonTerminals testGrammar
-    --putStr "all terminals: "
-    --print $ getAllTerminals testGrammar
-    --putStrLn "\nFirst-table:"
-    --print $ firstTable testGrammar
-    --putStrLn "\nFollow-table:"
-    --print $ followTable testGrammar
     let myParser = createParser testGrammar
-    let sequence = ["a", "c", "b", "g", "h"]
-    let tree = myParser sequence
+    let sequence = stringToTerminalList "acbgh"
+    let (tree, rest) = myParser sequence
     putStr "\nSequence: "
     print sequence
-    print tree
+    putStrLn "\nSyntax Tree:"
+    putStrLn $ showTree tree
+    putStr "rest: "
+    print rest
